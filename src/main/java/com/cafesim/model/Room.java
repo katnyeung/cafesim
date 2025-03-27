@@ -1,5 +1,11 @@
 package com.cafesim.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -7,6 +13,9 @@ import java.util.Set;
 
 @Entity
 @Table(name = "rooms")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Room {
 
     @Id
@@ -29,12 +38,16 @@ public class Room {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<Seat> seats = new HashSet<>();
 
-    // Constructors
-    public Room() {
-    }
+    @OneToMany(mappedBy = "room", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<UserRoom> userRooms = new HashSet<>();
 
+    // Constructor for creating new rooms
     public Room(String name, String description, int capacity) {
         this.name = name;
         this.description = description;
@@ -50,62 +63,5 @@ public class Room {
             seat.setOccupied(false);
             seats.add(seat);
         }
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public int getCapacity() {
-        return capacity;
-    }
-
-    public void setCapacity(int capacity) {
-        this.capacity = capacity;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Set<Seat> getSeats() {
-        return seats;
-    }
-
-    public void setSeats(Set<Seat> seats) {
-        this.seats = seats;
     }
 }

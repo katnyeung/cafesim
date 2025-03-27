@@ -1,8 +1,15 @@
 package com.cafesim.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RegistrationRequest {
 
     @NotBlank(message = "Username is required")
@@ -15,29 +22,4 @@ public class RegistrationRequest {
 
     @Size(max = 500, message = "Avatar description is too long")
     private String avatarDescription;
-
-    // Getters and Setters
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getAvatarDescription() {
-        return avatarDescription;
-    }
-
-    public void setAvatarDescription(String avatarDescription) {
-        this.avatarDescription = avatarDescription;
-    }
 }

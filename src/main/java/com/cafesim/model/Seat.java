@@ -1,11 +1,19 @@
 package com.cafesim.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "seats", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"room_id", "position"})
 })
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Seat {
 
     @Id
@@ -14,6 +22,7 @@ public class Seat {
 
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = false)
+    @ToString.Exclude
     private Room room;
 
     @Column(nullable = false)
@@ -24,55 +33,17 @@ public class Seat {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @ToString.Exclude
     private User user;
 
-    // Constructors
-    public Seat() {
-    }
-
+    // Constructor for creating seats
     public Seat(Room room, int position) {
         this.room = room;
         this.position = position;
         this.occupied = false;
     }
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Room getRoom() {
-        return room;
-    }
-
-    public void setRoom(Room room) {
-        this.room = room;
-    }
-
-    public int getPosition() {
-        return position;
-    }
-
-    public void setPosition(int position) {
-        this.position = position;
-    }
-
-    public boolean isOccupied() {
-        return occupied;
-    }
-
-    public void setOccupied(boolean occupied) {
-        this.occupied = occupied;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
+    // Custom setter for user that also updates the occupied status
     public void setUser(User user) {
         this.user = user;
         this.occupied = user != null;

@@ -1,8 +1,15 @@
 package com.cafesim.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class LoginRequest {
 
     @NotBlank(message = "Username is required")
@@ -12,21 +19,4 @@ public class LoginRequest {
     @NotBlank(message = "Password is required")
     @Size(min = 6, max = 120, message = "Password must be between 6 and 120 characters")
     private String password;
-
-    // Getters and Setters
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 }

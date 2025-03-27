@@ -1,6 +1,10 @@
 package com.cafesim.model;
 
-import com.theokanning.openai.completion.chat.ChatMessage;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -9,6 +13,9 @@ import java.util.Set;
 
 @Entity
 @Table(name = "users")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
@@ -34,92 +41,25 @@ public class User {
     private LocalDateTime lastLogin;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<Seat> seats = new HashSet<>();
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<UserRoom> userRooms = new HashSet<>();
+
     @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<ChatMessage> messages = new HashSet<>();
 
-    // Constructors
-    public User() {
-    }
-
+    // Custom constructor for basic user creation
     public User(String username, String password) {
         this.username = username;
         this.password = password;
         this.createdAt = LocalDateTime.now();
         this.lastLogin = LocalDateTime.now();
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getAvatarDescription() {
-        return avatarDescription;
-    }
-
-    public void setAvatarDescription(String avatarDescription) {
-        this.avatarDescription = avatarDescription;
-    }
-
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
-
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getLastLogin() {
-        return lastLogin;
-    }
-
-    public void setLastLogin(LocalDateTime lastLogin) {
-        this.lastLogin = lastLogin;
-    }
-
-    public Set<Seat> getSeats() {
-        return seats;
-    }
-
-    public void setSeats(Set<Seat> seats) {
-        this.seats = seats;
-    }
-
-    public Set<ChatMessage> getMessages() {
-        return messages;
-    }
-
-    public void setMessages(Set<ChatMessage> messages) {
-        this.messages = messages;
     }
 }

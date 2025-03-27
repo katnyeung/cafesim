@@ -1,4 +1,4 @@
-package com.cafesim.dto;
+package com.cafesim.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RoomRequest {
-    private String name;
+public class AvatarRequest {
     private String description;
-    private int capacity = 10;
 }

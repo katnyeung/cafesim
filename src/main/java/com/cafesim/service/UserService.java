@@ -4,6 +4,7 @@ import com.cafesim.cache.UserCache;
 import com.cafesim.model.Room;
 import com.cafesim.model.Seat;
 import com.cafesim.model.User;
+import com.cafesim.model.UserRoom;
 import com.cafesim.repository.RoomRepository;
 import com.cafesim.repository.SeatRepository;
 import com.cafesim.repository.UserRepository;
@@ -151,36 +152,41 @@ public class UserService {
     }
 
     /**
-     * Assign a seat to a user in a specific room
+     * Assign a seat to a user in the default room (for simplicity)
+     * This method is used by the WebSocketController
      */
     @Transactional
-    public boolean assignSeat(Long userId, Long roomId, int seatPosition) {
+    public boolean assignSeat(Long userId, Long roomId, Long seatNumber) {
         Optional<User> userOpt = userRepository.findById(userId);
-        Optional<Room> roomOpt = roomRepository.findById(roomId);
 
-        if (userOpt.isPresent() && roomOpt.isPresent()) {
+        if (userOpt.isPresent()) {
             User user = userOpt.get();
-            Room room = roomOpt.get();
 
-            // First release any existing seat for this user in this room
-            releaseUserSeatsInRoom(userId, roomId);
-
-            // Find the requested seat
-            Optional<Seat> seatOpt = seatRepository.findByRoomIdAndPosition(roomId, seatPosition);
-
-            if (seatOpt.isPresent()) {
-                Seat seat = seatOpt.get();
-
-                // Check if seat is available
-                if (!seat.isOccupied()) {
-                    seat.setUser(user);
-                    seat.setOccupied(true);
-                    seatRepository.save(seat);
-                    return true;
-                }
+            // For simplicity in this demo, we'll use the first room
+            List<Room> rooms = roomRepository.findByActiveTrue();
+            if (rooms.isEmpty()) {
+                // Create a default room if none exists
+                Room defaultRoom = createDefaultRoomIfNotExists();
+                return assignSeat(userId, defaultRoom.getId(), seatNumber);
+            } else {
+                // Use the first active room
+                return assignSeat(userId, rooms.get(0).getId(), seatNumber);
             }
         }
         return false;
+    }
+
+    /**
+     * Create a default room if none exists
+     */
+    private Room createDefaultRoomIfNotExists() {
+        if (roomRepository.findByName("Default Room") == null) {
+            Room defaultRoom = new Room("Default Room", "The default café room", 10);
+            defaultRoom.initializeSeats();
+            return roomRepository.save(defaultRoom);
+        } else {
+            return roomRepository.findByName("Default Room");
+        }
     }
 
     /**
@@ -250,5 +256,102 @@ public class UserService {
         return seatRepository.findByUserIdAndOccupied(userId, true).stream()
                 .map(Seat::getRoom)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get rooms where a user has an active seat
+     */
+    public List<Room> getRoomsWhereUserIsSeated(Long userId) {
+        return seatRepository.findByUserIdAndOccupied(userId, true).stream()
+                .map(Seat::getRoom)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all rooms available to a user (joined + public rooms)
+     */
+    @Transactional(readOnly = true)
+    public List<Room> getAllAvailableRoomsForUser(Long userId, boolean includeInactive) {
+        // Get rooms the user has explicitly joined
+        List<Long> joinedRoomIds = userRoomRepository.findRoomIdsByUserId(userId);
+
+        // Create a query to get both joined rooms and public rooms
+        List<Room> allRooms;
+        if (includeInactive) {
+            allRooms = roomRepository.findAll();
+        } else {
+            allRooms = roomRepository.findByActiveTrue();
+        }
+
+        // Filter or mark rooms based on whether the user has joined them
+        return allRooms;
+    }
+
+    /**
+     * Check if user is active in a room (has visited recently)
+     */
+    public boolean isUserActiveInRoom(Long userId, Long roomId, int minutesThreshold) {
+        Optional<UserRoom> userRoomOpt = userRoomRepository.findByUserIdAndRoomId(userId, roomId);
+
+        if (userRoomOpt.isPresent()) {
+            UserRoom userRoom = userRoomOpt.get();
+            LocalDateTime threshold = LocalDateTime.now().minusMinutes(minutesThreshold);
+            return userRoom.getLastActive().isAfter(threshold);
+        }
+
+        return false;
+    }
+
+    /**
+     * Get user's active seat in a room if they have one
+     */
+    public Optional<Seat> getUserSeatInRoom(Long userId, Long roomId) {
+        return seatRepository.findByUserIdAndRoomId(userId, roomId);
+    }
+
+    /**
+     * Check if a specific seat is occupied by a user
+     */
+    public boolean isSeatOccupiedByUser(Long userId, Long roomId, int seatPosition) {
+        Optional<Seat> seatOpt = seatRepository.findByRoomIdAndPosition(roomId, seatPosition);
+
+        return seatOpt.map(seat ->
+                seat.isOccupied() &&
+                        seat.getUser() != null &&
+                        seat.getUser().getId().equals(userId)
+        ).orElse(false);
+    }
+
+    /**
+     * Find a seat position for a user in a room
+     */
+    public Optional<Integer> findUserSeatPositionInRoom(Long userId, Long roomId) {
+        Optional<Seat> seatOpt = seatRepository.findByUserIdAndRoomId(userId, roomId);
+        return seatOpt.map(Seat::getPosition);
+    }
+
+    /**
+     * Get a count of users currently seated in a room
+     */
+    public long countSeatedUsersInRoom(Long roomId) {
+        return seatRepository.countOccupiedSeatsInRoom(roomId);
+    }
+
+    /**
+     * Find all available seats in a room
+     */
+    public List<Integer> getAvailableSeatPositionsInRoom(Long roomId) {
+        return seatRepository.findByRoomIdAndOccupied(roomId, false).stream()
+                .map(Seat::getPosition)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Find the first available seat in a room
+     */
+    public Optional<Integer> findFirstAvailableSeatInRoom(Long roomId) {
+        return seatRepository.findByRoomIdAndOccupied(roomId, false).stream()
+                .findFirst()
+                .map(Seat::getPosition);
     }
 }
